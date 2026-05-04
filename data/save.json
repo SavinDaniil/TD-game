@@ -1,0 +1,11 @@
+{
+  "meta_coins": 1628,
+  "best_wave": 10,
+  "upgrades": {
+    "max_hp": 5,
+    "damage_bonus": 4,
+    "attack_speed_bonus": 0,
+    "start_coins": 1,
+    "kill_reward_bonus": 0
+  }
+}

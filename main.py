@@ -1,12 +1,12 @@
 import pygame
 
-from src.constants import HEIGHT, TITLE, WIDTH
+from src.constants import HEIGHT, WIDTH
 from src.game import Game
 
 
 def main():
     pygame.init()
-    pygame.display.set_caption(TITLE)
+    pygame.display.set_caption("Tower Defense")
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     Game(screen).run()
     pygame.quit()
