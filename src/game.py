@@ -10,9 +10,9 @@ from src.wave_manager import WaveManager
 
 
 class Game:
-    def __init__(self, screen, return_to_menu=None, level_id=1):
+    def __init__(self, screen, return_to_menu, level_id=1):
         self.screen = screen
-        self.return_to_menu = return_to_menu or (lambda: None)
+        self.return_to_menu = return_to_menu
         self.level_id = level_id
         self.level_data = LEVEL_DATA[level_id]
         self.clock = pygame.time.Clock()

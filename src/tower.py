@@ -289,8 +289,177 @@ class CannonTower(Tower):
             pygame.draw.circle(surface, WHITE, self.position, 31, 2)
 
 
+class FreezeTower(Tower):
+    tower_type = "freeze"
+
+    def __init__(self, cell, position, player):
+        super().__init__(cell, position, player)
+        self.slow = 0.65
+        self.duration = 1.0
+        self.pulse = 0
+
+    def apply_ability(self, ability):
+        super().apply_ability(ability)
+        if "Harder slow" in ability:
+            self.slow = 0.52
+        if "Longer slow" in ability:
+            self.duration = 1.7
+
+    def update(self, dt, enemies, projectiles, game_map=None, towers=None):
+        self.pulse += dt
+        for enemy in enemies:
+            if (
+                enemy.alive
+                and not enemy.is_flying
+                and distance(self.position, enemy.position) <= self.range
+            ):
+                hard_stop = (
+                    "ultimate" in self.selected_abilities
+                    and random.random() < 0.002
+                    and enemy.enemy_type != "boss"
+                )
+                enemy.apply_slow(self.slow, self.duration, hard_stop)
+                if self.damage > 0:
+                    dealt = enemy.take_damage(self.damage * dt, "freeze")
+                    self.gain_exp(dealt * 0.08)
+
+    def draw(self, surface, selected=False):
+        pygame.draw.polygon(
+            surface,
+            self.color,
+            regular_polygon(self.position, 25, 6, math.pi / 6),
+        )
+        for angle in range(0, 180, 45):
+            rad = math.radians(angle)
+            dx = math.cos(rad) * 14
+            dy = math.sin(rad) * 14
+            pygame.draw.line(
+                surface,
+                WHITE,
+                (self.position[0] - dx, self.position[1] - dy),
+                (self.position[0] + dx, self.position[1] + dy),
+                2,
+            )
+        if selected:
+            pygame.draw.circle(surface, WHITE, self.position, 31, 2)
+
+
+class AntiAirTower(Tower):
+    tower_type = "anti_air"
+
+    def shoot(self, target, enemies, projectiles):
+        targets = [target]
+        if "Two targets" in self.selected_abilities:
+            others = [
+                enemy
+                for enemy in enemies
+                if enemy.alive
+                and enemy.is_flying
+                and enemy is not target
+                and distance(self.position, enemy.position) <= self.range
+            ]
+            targets += others[:1]
+        if "ultimate" in self.selected_abilities and random.random() < 0.08:
+            targets = [
+                enemy
+                for enemy in enemies
+                if enemy.alive
+                and enemy.is_flying
+                and distance(self.position, enemy.position) <= self.range
+            ]
+        for enemy in targets:
+            projectiles.append(
+                Projectile(
+                    self.position,
+                    enemy,
+                    430,
+                    self.damage,
+                    self.color,
+                    owner=self,
+                    damage_type="air",
+                )
+            )
+
+    def draw(self, surface, selected=False):
+        pygame.draw.polygon(surface, self.color, regular_polygon(self.position, 24, 6))
+        arrow = [
+            (self.position[0], self.position[1] - 15),
+            (self.position[0] + 10, self.position[1] + 4),
+            (self.position[0] + 3, self.position[1] + 4),
+            (self.position[0] + 3, self.position[1] + 15),
+            (self.position[0] - 3, self.position[1] + 15),
+            (self.position[0] - 3, self.position[1] + 4),
+            (self.position[0] - 10, self.position[1] + 4),
+        ]
+        pygame.draw.polygon(surface, (45, 28, 5), arrow)
+        if selected:
+            pygame.draw.circle(surface, WHITE, self.position, 31, 2)
+
+
+class SplashTower(Tower):
+    tower_type = "splash"
+
+    def __init__(self, cell, position, player):
+        super().__init__(cell, position, player)
+        self.projectile_count = 8
+
+    def apply_ability(self, ability):
+        super().apply_ability(ability)
+        if "More shots" in ability:
+            self.projectile_count += 3
+
+    def find_target(self, enemies):
+        for enemy in enemies:
+            if (
+                enemy.alive
+                and not enemy.is_flying
+                and distance(self.position, enemy.position) <= self.range
+            ):
+                return enemy
+        return None
+
+    def shoot(self, target, enemies, projectiles):
+        count = self.projectile_count
+        if "ultimate" in self.selected_abilities and random.random() < 0.15:
+            for enemy in enemies:
+                if enemy.alive and distance(self.position, enemy.position) <= self.range:
+                    dealt = enemy.take_damage(self.damage * 3, "splash")
+                    self.gain_exp(dealt * 0.15)
+            count += 4
+        for index in range(count):
+            angle = math.tau * index / count
+            direction = (math.cos(angle), math.sin(angle))
+            projectiles.append(
+                Projectile(
+                    self.position,
+                    None,
+                    self.projectile_speed,
+                    self.damage,
+                    self.color,
+                    owner=self,
+                    direction=direction,
+                    damage_type="splash",
+                )
+            )
+
+    def draw(self, surface, selected=False):
+        pygame.draw.circle(surface, self.color, self.position, 24)
+        for index in range(8):
+            angle = math.tau * index / 8
+            end = (
+                self.position[0] + math.cos(angle) * 18,
+                self.position[1] + math.sin(angle) * 18,
+            )
+            pygame.draw.line(surface, WHITE, self.position, end, 2)
+        if selected:
+            pygame.draw.circle(surface, WHITE, self.position, 31, 2)
+
+
 TOWER_CLASSES = {
     "basic": BasicTower,
     "sniper": SniperTower,
     "cannon": CannonTower,
+    "freeze": FreezeTower,
+    "anti_air": AntiAirTower,
+    "splash": SplashTower,
 }
