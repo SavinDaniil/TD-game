@@ -60,8 +60,9 @@ class MainMenu:
         for level_id, data in LEVEL_DATA.items():
             text = f"{data['name']} - {data['waves']} waves"
             level_menu.add.button(text, self.start_game, level_id)
-        level_menu.add.button("Back", self.refresh)
+        level_menu.add.button("Back", level_menu.disable)
         level_menu.mainloop(self.screen)
+        self.refresh()
 
     def reset_progress(self):
         refunded = self.calculate_spent_upgrade_coins()
@@ -94,7 +95,10 @@ class MainMenu:
                     rects = self.ui.draw_upgrades(self.screen, self.player)
                     for key, rect in rects.items():
                         if rect.collidepoint(event.pos):
-                            self.buy_upgrade(key)
+                            if key == "back":
+                                in_upgrades = False
+                            else:
+                                self.buy_upgrade(key)
 
             self.screen.fill(BACKGROUND)
             self.ui.draw_upgrades(self.screen, self.player)

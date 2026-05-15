@@ -70,8 +70,8 @@ class GameMap:
                 )
                 pygame.draw.rect(surface, GRID_LINE, rect, 1)
 
-        self.draw_road(surface, ROAD_EDGE, 50, y_offset=-2)
-        self.draw_road(surface, ROAD, 38, y_offset=-2)
+        self.draw_road(surface, ROAD_EDGE, 51)
+        self.draw_road(surface, ROAD, 39)
 
         occupied = {tower.cell for tower in towers}
         for cell in self.tower_slots:
@@ -86,13 +86,13 @@ class GameMap:
         pygame.draw.circle(surface, (80, 245, 150), self.path_points[0], 12)
         pygame.draw.circle(surface, (245, 80, 115), self.path_points[-1], 15)
 
-    def draw_road(self, surface, color, width, y_offset=0):
+    def draw_road(self, surface, color, width):
         radius = width // 2
         for start, end in zip(self.path_points, self.path_points[1:]):
-            shifted_start = (start[0], start[1] + y_offset)
-            shifted_end = (end[0], end[1] + y_offset)
+            shifted_start = (start[0], start[1])
+            shifted_end = (end[0], end[1])
             pygame.draw.line(surface, color, shifted_start, shifted_end, width)
 
         for point in self.path_points:
-            shifted_point = (point[0], point[1] + y_offset)
+            shifted_point = (point[0], point[1])
             pygame.draw.circle(surface, color, shifted_point, radius)

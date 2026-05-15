@@ -203,18 +203,44 @@ class UI:
 
     def draw_upgrades(self, surface, player):
         surface.fill((13, 16, 29))
-        draw_text(surface, self.title_font, "Permanent Upgrades", TEXT, (70, 45))
-        draw_text(surface, self.font, f"Meta coins: {player.meta_coins}", YELLOW, (70, 84))
+        draw_text(
+            surface,
+            self.title_font,
+            "Permanent Upgrades",
+            TEXT,
+            (WIDTH // 2, 45),
+            center=True,
+        )
+        draw_text(
+            surface,
+            self.font,
+            f"Meta coins: {player.meta_coins}",
+            YELLOW,
+            (WIDTH // 2, 84),
+            center=True,
+        )
+        mouse_pos = pygame.mouse.get_pos()
+        upgrade_width = 520
+        upgrade_x = (WIDTH - upgrade_width) // 2
+
         y = 140
         rects = {}
         for key, info in UPGRADE_INFO.items():
             level = player.permanent_upgrades[key]
             cost = info["base_cost"] + info["step"] * level
             text = f"{info['name']}  Lv {level}/{info['max']}  Cost {cost}"
-            rect = pygame.Rect(70, y, 520, 42)
+            rect = pygame.Rect(upgrade_x, y, upgrade_width, 42)
             pygame.draw.rect(surface, PANEL_LIGHT, rect, border_radius=8)
             draw_text(surface, self.font, text, TEXT, (rect.x + 14, rect.y + 10))
             rects[key] = rect
             y += 56
-        draw_text(surface, self.small_font, "ESC - back", MUTED_TEXT, (70, HEIGHT - 60))
+
+        back_rect = pygame.Rect(WIDTH // 2 - 80, y + 8, 160, 40)
+        back_color = PANEL_LIGHT
+        if back_rect.collidepoint(mouse_pos):
+            back_color = tuple(min(255, value + 24) for value in back_color)
+        pygame.draw.rect(surface, back_color, back_rect, border_radius=8)
+        pygame.draw.rect(surface, (78, 89, 118), back_rect, 1, border_radius=8)
+        draw_text(surface, self.font, "Back", TEXT, back_rect.center, center=True)
+        rects["back"] = back_rect
         return rects

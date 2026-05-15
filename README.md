@@ -1,6 +1,6 @@
 # Tower Defense
 
-Упрощенный Tower Defense на Python, вдохновленный игрой Infinitode 2.
+Tower Defense на Python, вдохновленный игрой Infinitode 2.
 
 ## Установка зависимостей
 
