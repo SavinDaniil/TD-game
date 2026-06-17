@@ -1,5 +1,7 @@
 import random
 
+from src.constants import (BASE_SPAWN_DELAY, BASE_ENEMY_COUNT, FAST_WAVE_THRESHOLD, STRONG_WAVE_THRESHOLD,
+                           ARMORED_WAVE_THRESHOLD, AIR_WAVE_THRESHOLD)
 from src.enemy import Enemy
 
 
@@ -12,7 +14,7 @@ class WaveManager:
         self.enemies_to_spawn = []
         self.spawn_timer = 0
         self.wave_active = False
-        self.spawn_delay = 0.65
+        self.spawn_delay = BASE_SPAWN_DELAY
 
     def start_wave(self):
         if self.wave_active or self.current_wave >= self.max_wave:
@@ -32,14 +34,14 @@ class WaveManager:
             enemies += ["air"] * amount
             return enemies
 
-        enemies = ["normal"] * int((7 + wave) * self.enemy_multiplier)
-        if wave >= 3:
+        enemies = ["normal"] * int((BASE_ENEMY_COUNT + wave) * self.enemy_multiplier)
+        if wave >= FAST_WAVE_THRESHOLD:
             enemies += ["fast"] * int((wave // 2 + 2) * self.enemy_multiplier)
-        if wave >= 6:
+        if wave >= STRONG_WAVE_THRESHOLD:
             enemies += ["strong"] * int(max(1, wave // 3) * self.enemy_multiplier)
-        if wave >= 8:
+        if wave >= ARMORED_WAVE_THRESHOLD:
             enemies += ["armored"] * int((wave // 4 + 1) * self.enemy_multiplier)
-        if wave >= 10:
+        if wave >= AIR_WAVE_THRESHOLD:
             enemies += ["air"] * int(max(1, wave // 3) * self.enemy_multiplier)
         random.shuffle(enemies)
         return enemies

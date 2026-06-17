@@ -1,20 +1,21 @@
 import math
 import random
-
 import pygame
-
-from src.constants import TOWER_DATA, WHITE
+from src.constants import (TOWER_DATA, WHITE, LEVEL_UP_DAMAGE_MULTIPLIER_EARLY, LEVEL_UP_DAMAGE_MULTIPLIER_LATE,
+                           LEVEL_UP_RANGE_MULTIPLIER, LEVEL_UP_SPEED_MULTIPLIER_EARLY, LEVEL_UP_SPEED_MULTIPLIER_LATE)
 from src.projectile import Projectile
 from src.utils import distance, regular_polygon
 
+ABILITY_TEXT = [
+    "Faster Attack",
+    "More Damage",
+    "Longer Range",
+]
 
-ABILITY_TEXT = {
-    "basic": ["Faster attack", "More damage", "Fast projectiles"],
-    "sniper": ["Crit chance", "Crit damage", "Faster aim"],
-    "cannon": ["Blast radius", "Blast damage", "Burn"],
-    "freeze": ["Harder slow", "More range", "Longer slow"],
-    "anti_air": ["Air damage", "Fast rockets", "Two targets"],
-    "splash": ["More shots", "Shot speed", "More damage"],
+ABILITY_EFFECTS = {
+    "Faster Attack": {"attack_speed": 1.15},
+    "More Damage": {"damage": 1.18},
+    "Longer Range": {"range": 1.15},
 }
 
 
@@ -41,7 +42,6 @@ class Tower:
         self.cooldown = random.random() * 0.25
         self.projectile_speed = 330
         self.power_multiplier = 1
-        self.ultimate_used = False
 
     @property
     def next_level_exp(self):
@@ -49,7 +49,7 @@ class Tower:
 
     @property
     def ability_options(self):
-        return ABILITY_TEXT[self.tower_type]
+        return ABILITY_TEXT
 
     def update(self, dt, enemies, projectiles, game_map=None, towers=None):
         self.cooldown -= dt
@@ -68,10 +68,8 @@ class Tower:
 
     def find_target(self, enemies):
         possible = [
-            enemy
-            for enemy in enemies
-            if enemy.alive
-            and self.can_target(enemy)
+            enemy for enemy in enemies
+            if enemy.alive and self.can_target(enemy)
             and distance(self.position, enemy.position) <= self.range
         ]
         if not possible:
@@ -79,12 +77,13 @@ class Tower:
         return max(possible, key=lambda enemy: enemy.path_index)
 
     def shoot(self, target, enemies, projectiles):
+        damage = self.damage * self.power_multiplier
         projectiles.append(
             Projectile(
                 self.position,
                 target,
                 self.projectile_speed,
-                self.damage * self.power_multiplier,
+                damage,
                 self.color,
                 owner=self,
                 damage_type=self.tower_type,
@@ -102,18 +101,18 @@ class Tower:
     def level_up(self):
         self.level += 1
         if self.level <= 10:
-            self.damage *= 1.05
-            self.range *= 1.01
-            self.attack_speed *= 1.015
+            self.damage *= LEVEL_UP_DAMAGE_MULTIPLIER_EARLY
+            self.range *= LEVEL_UP_RANGE_MULTIPLIER
+            self.attack_speed *= LEVEL_UP_SPEED_MULTIPLIER_EARLY
         else:
-            self.damage *= 1.01
-            self.range *= 1.01
-            self.attack_speed *= 1.01
+            self.damage *= LEVEL_UP_DAMAGE_MULTIPLIER_LATE
+            self.range *= LEVEL_UP_RANGE_MULTIPLIER
+            self.attack_speed *= LEVEL_UP_SPEED_MULTIPLIER_LATE
 
         if self.level == 10:
             self.select_ability(2)
         if self.level == 20:
-            self.select_final_ability(powerful=False)
+            self.selected_abilities.append("ultimate")
 
     def needs_ability_choice(self):
         if self.level >= 7 and len(self.selected_abilities) < 2:
@@ -131,25 +130,13 @@ class Tower:
         self.selected_abilities.append(ability)
         self.apply_ability(ability)
 
-    def select_final_ability(self, powerful=False):
-        if "ultimate" in self.selected_abilities or "powerful" in self.selected_abilities:
-            return
-        if powerful:
-            self.selected_abilities.append("powerful")
-            self.damage *= 1.1
-            self.range *= 1.06
-            self.attack_speed *= 1.08
-        else:
-            self.selected_abilities.append("ultimate")
-
     def apply_ability(self, ability):
-        if "Faster" in ability or "Fast" in ability:
-            self.attack_speed *= 1.15
-            self.projectile_speed *= 1.12
-        if "damage" in ability.lower() or "Crit damage" in ability:
-            self.damage *= 1.18
-        if "range" in ability.lower():
-            self.range *= 1.15
+        effects = ABILITY_EFFECTS.get(ability, {})
+        for attr, multiplier in effects.items():
+            if hasattr(self, attr):
+                current = getattr(self, attr)
+                if isinstance(current, (int, float)):
+                    setattr(self, attr, current * multiplier)
 
     def upgrade(self, player):
         if self.upgrade_level >= 10:
@@ -204,17 +191,16 @@ class SniperTower(Tower):
 
     def shoot(self, target, enemies, projectiles):
         damage = self.damage
-        if "Crit chance" in self.selected_abilities and random.random() < 0.25:
-            damage *= 2.2 if "Crit damage" in self.selected_abilities else 1.7
         if "ultimate" in self.selected_abilities:
             strongest = max(
                 [enemy for enemy in enemies if enemy.alive and not enemy.is_flying],
                 key=lambda enemy: enemy.hp,
                 default=target,
             )
-            if strongest.enemy_type == "boss" and random.random() < 0.12:
+            if strongest.enemy_type == "boss" and random.random() < 0.2:
                 damage *= 4
                 target = strongest
+
         projectiles.append(
             Projectile(
                 self.position,
@@ -249,13 +235,6 @@ class CannonTower(Tower):
         self.splash_radius = 55
         self.shots = 0
 
-    def apply_ability(self, ability):
-        super().apply_ability(ability)
-        if "Blast radius" in ability:
-            self.splash_radius *= 1.25
-        if "Blast damage" in ability:
-            self.damage *= 1.2
-
     def shoot(self, target, enemies, projectiles):
         self.shots += 1
         radius = self.splash_radius
@@ -263,6 +242,7 @@ class CannonTower(Tower):
         if "ultimate" in self.selected_abilities and self.shots % 5 == 0:
             radius *= 1.8
             damage *= 1.8
+
         projectile = Projectile(
             self.position,
             target,
@@ -275,8 +255,6 @@ class CannonTower(Tower):
             damage_type="explosion",
         )
         projectiles.append(projectile)
-        if "Burn" in self.selected_abilities:
-            target.burn_timer = 2.0
 
     def draw(self, surface, selected=False):
         pygame.draw.polygon(surface, self.color, regular_polygon(self.position, 25, 5))
@@ -297,13 +275,6 @@ class FreezeTower(Tower):
         self.slow = 0.65
         self.duration = 1.0
         self.pulse = 0
-
-    def apply_ability(self, ability):
-        super().apply_ability(ability)
-        if "Harder slow" in ability:
-            self.slow = 0.52
-        if "Longer slow" in ability:
-            self.duration = 1.7
 
     def update(self, dt, enemies, projectiles, game_map=None, towers=None):
         self.pulse += dt
@@ -349,17 +320,7 @@ class AntiAirTower(Tower):
 
     def shoot(self, target, enemies, projectiles):
         targets = [target]
-        if "Two targets" in self.selected_abilities:
-            others = [
-                enemy
-                for enemy in enemies
-                if enemy.alive
-                and enemy.is_flying
-                and enemy is not target
-                and distance(self.position, enemy.position) <= self.range
-            ]
-            targets += others[:1]
-        if "ultimate" in self.selected_abilities and random.random() < 0.08:
+        if "ultimate" in self.selected_abilities and random.random() < 0.15:
             targets = [
                 enemy
                 for enemy in enemies
@@ -367,6 +328,7 @@ class AntiAirTower(Tower):
                 and enemy.is_flying
                 and distance(self.position, enemy.position) <= self.range
             ]
+
         for enemy in targets:
             projectiles.append(
                 Projectile(
@@ -403,11 +365,6 @@ class SplashTower(Tower):
         super().__init__(cell, position, player)
         self.projectile_count = 8
 
-    def apply_ability(self, ability):
-        super().apply_ability(ability)
-        if "More shots" in ability:
-            self.projectile_count += 3
-
     def find_target(self, enemies):
         for enemy in enemies:
             if (
@@ -426,6 +383,7 @@ class SplashTower(Tower):
                     dealt = enemy.take_damage(self.damage * 3, "splash")
                     self.gain_exp(dealt * 0.15)
             count += 4
+
         for index in range(count):
             angle = math.tau * index / count
             direction = (math.cos(angle), math.sin(angle))

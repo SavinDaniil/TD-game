@@ -1,7 +1,8 @@
 import pygame
 import pygame_menu
 
-from src.constants import BACKGROUND, HEIGHT, LEVEL_DATA, TEXT, UPGRADE_INFO, WIDTH
+from src.constants import (BACKGROUND, HEIGHT, LEVEL_DATA, TEXT, UPGRADE_INFO, WIDTH, TITLE_FONT_SIZE,
+                           WIDGET_FONT_SIZE, WIDGET_MARGIN)
 from src.game import Game
 from src.player import Player
 from src.ui import UI
@@ -26,9 +27,9 @@ class MainMenu:
             widget_selection_effect=pygame_menu.widgets.LeftArrowSelection(),
             selection_color=(88, 225, 220),
         )
-        theme.title_font_size = 42
-        theme.widget_font_size = 28
-        theme.widget_margin = (0, 14)
+        theme.title_font_size = TITLE_FONT_SIZE
+        theme.widget_font_size = WIDGET_FONT_SIZE
+        theme.widget_margin = WIDGET_MARGIN
         return theme
 
     def build_main_menu(self):

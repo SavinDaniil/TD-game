@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from src.constants import RED, WHITE
+from src.constants import RED, WHITE, WAVE_HP_SCALE, WAVE_SPEED_SCALE, WAVE_REWARD_SCALE
 from src.utils import distance, regular_polygon
 
 
@@ -61,15 +61,15 @@ ENEMY_STATS = {
 class Enemy:
     def __init__(self, path_points, enemy_type="normal", wave=1):
         stats = ENEMY_STATS[enemy_type]
-        scale = 1 + (wave - 1) * 0.13
+        scale = 1 + (wave - 1) * WAVE_HP_SCALE
         self.path_points = path_points
         self.position = [float(path_points[0][0]), float(path_points[0][1])]
         self.path_index = 1
         self.enemy_type = enemy_type
         self.max_hp = int(stats["hp"] * scale)
         self.hp = self.max_hp
-        self.speed = stats["speed"] * (1 + (wave - 1) * 0.015)
-        self.reward = int(stats["reward"] * (1 + wave * 0.07))
+        self.speed = stats["speed"] * (1 + (wave - 1) * WAVE_SPEED_SCALE)
+        self.reward = int(stats["reward"] * (1 + wave * WAVE_REWARD_SCALE))
         self.armor = stats["armor"]
         self.is_flying = stats["flying"]
         self.color = stats["color"]

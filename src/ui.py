@@ -1,19 +1,9 @@
 import pygame
 
-from src.constants import (
-    HEIGHT,
-    MUTED_TEXT,
-    PANEL,
-    PANEL_LIGHT,
-    PANEL_WIDTH,
-    PANEL_X,
-    TEXT,
-    TOWER_DATA,
-    TOWER_TYPES,
-    UPGRADE_INFO,
-    WIDTH,
-    YELLOW,
-)
+from src.constants import (HEIGHT, MUTED_TEXT, PANEL, PANEL_LIGHT, PANEL_WIDTH, PANEL_X, TEXT, TOWER_DATA, TOWER_TYPES,
+                           UPGRADE_INFO, WIDTH, YELLOW, BUTTON_Y_START, BUTTON_HEIGHT, TOWER_BUTTON_Y_START,
+                           TOWER_BUTTON_HEIGHT, TOWER_BUTTON_SPACING, UPGRADE_BUTTON_Y, ABILITY_BUTTON_Y_START,
+                           ABILITY_BUTTON_HEIGHT, ABILITY_BUTTON_SPACING)
 from src.utils import draw_text
 
 
@@ -48,24 +38,25 @@ class UI:
     def build_buttons(self):
         self.buttons = [
             Button(
-                (PANEL_X + 18, 112, PANEL_WIDTH - 36, 42),
+                (PANEL_X + 18, BUTTON_Y_START, PANEL_WIDTH - 36, BUTTON_HEIGHT),
                 "Start Wave",
                 "start_wave",
             )
         ]
-        y = 194
+        y = TOWER_BUTTON_Y_START
         for tower_type in TOWER_TYPES:
             data = TOWER_DATA[tower_type]
-            text = f"{data['name']}  ${data['cost']}"
-            rect = (PANEL_X + 18, y, PANEL_WIDTH - 36, 31)
+            text = f"{data['name']} ${data['cost']}"
+            rect = (PANEL_X + 18, y, PANEL_WIDTH - 36, TOWER_BUTTON_HEIGHT)
             self.tower_buttons.append(Button(rect, text, f"build:{tower_type}"))
-            y += 36
+            y += TOWER_BUTTON_SPACING
         self.buttons += self.tower_buttons
         self.buttons.append(
-            Button((PANEL_X + 18, 512, PANEL_WIDTH - 36, 36), "Upgrade", "upgrade")
+            Button((PANEL_X + 18, UPGRADE_BUTTON_Y, PANEL_WIDTH - 36, 36), "Upgrade", "upgrade")
         )
         for index in range(3):
-            rect = (PANEL_X + 18, 556 + index * 34, PANEL_WIDTH - 36, 30)
+            rect = (PANEL_X + 18, ABILITY_BUTTON_Y_START + index * ABILITY_BUTTON_SPACING, PANEL_WIDTH - 36,
+                    ABILITY_BUTTON_HEIGHT)
             self.ability_buttons.append(
                 Button(rect, f"Ability {index + 1}", f"ability:{index}")
             )

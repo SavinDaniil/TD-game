@@ -1,16 +1,8 @@
 import pygame
 
-from src.constants import (
-    GRID_COLS,
-    GRID_LINE,
-    GRID_ROWS,
-    LEVEL_DATA,
-    MAP_OFFSET_X,
-    MAP_OFFSET_Y,
-    ROAD,
-    ROAD_EDGE,
-    TILE_SIZE,
-)
+from src.constants import (GRID_COLS, GRID_LINE, GRID_ROWS, LEVEL_DATA, MAP_OFFSET_X, MAP_OFFSET_Y, ROAD, ROAD_EDGE,
+                           TILE_SIZE, ROAD_EDGE_WIDTH, ROAD_WIDTH, TOWER_SLOT_RADIUS, START_POINT_RADIUS,
+                           END_POINT_RADIUS, START_COLOR, END_COLOR)
 
 
 class GameMap:
@@ -70,8 +62,8 @@ class GameMap:
                 )
                 pygame.draw.rect(surface, GRID_LINE, rect, 1)
 
-        self.draw_road(surface, ROAD_EDGE, 51)
-        self.draw_road(surface, ROAD, 39)
+        self.draw_road(surface, ROAD_EDGE, ROAD_EDGE_WIDTH)
+        self.draw_road(surface, ROAD, ROAD_WIDTH)
 
         occupied = {tower.cell for tower in towers}
         for cell in self.tower_slots:
@@ -81,10 +73,10 @@ class GameMap:
             if cell == mouse_cell and cell not in occupied:
                 color = (92, 140, 190)
                 width = 3
-            pygame.draw.circle(surface, color, center, 15, width)
+            pygame.draw.circle(surface, color, center, TOWER_SLOT_RADIUS, width)
 
-        pygame.draw.circle(surface, (80, 245, 150), self.path_points[0], 12)
-        pygame.draw.circle(surface, (245, 80, 115), self.path_points[-1], 15)
+        pygame.draw.circle(surface, START_COLOR, self.path_points[0], START_POINT_RADIUS)
+        pygame.draw.circle(surface, END_COLOR, self.path_points[-1], END_POINT_RADIUS)
 
     def draw_road(self, surface, color, width):
         radius = width // 2

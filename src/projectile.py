@@ -1,5 +1,6 @@
 import pygame
 
+from src.constants import DIRECTIONAL_LIFETIME, HOMING_LIFETIME, HIT_DISTANCE, EXP_DAMAGE_RATIO, EXP_KILL_BONUS
 from src.utils import distance
 
 
@@ -28,7 +29,7 @@ class Projectile:
         self.direction = direction
         self.damage_type = damage_type
         self.alive = True
-        self.life_time = 1.5 if direction else 3.0
+        self.life_time = DIRECTIONAL_LIFETIME if direction else HOMING_LIFETIME
 
     def update(self, dt, enemies):
         if self.direction:
@@ -58,7 +59,7 @@ class Projectile:
 
     def hit_enemy_on_path(self, enemies):
         for enemy in enemies:
-            if enemy.alive and distance(self.position, enemy.position) < 14:
+            if enemy.alive and distance(self.position, enemy.position) < HIT_DISTANCE:
                 self.deal_damage(enemy)
                 self.alive = False
                 return
@@ -75,9 +76,9 @@ class Projectile:
         if enemy and enemy.alive:
             dealt = enemy.take_damage(self.damage, self.damage_type)
             if self.owner:
-                self.owner.gain_exp(dealt * 0.12)
+                self.owner.gain_exp(dealt * EXP_DAMAGE_RATIO)
                 if not enemy.alive:
-                    self.owner.gain_exp(12)
+                    self.owner.gain_exp(EXP_KILL_BONUS)
 
     def draw(self, surface):
         pygame.draw.circle(
