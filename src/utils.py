@@ -7,7 +7,8 @@ from src.constants import SAVE_PATH
 
 DEFAULT_SAVE = {
     "meta_coins": 0,
-    "best_wave": 0,
+    "music_volume": 0.5,
+    "game_speed": 1.0,
     "upgrades": {
         "max_hp": 0,
         "damage_bonus": 0,

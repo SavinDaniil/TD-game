@@ -1,18 +1,29 @@
 import pygame
-
-from src.constants import (GRID_COLS, GRID_LINE, GRID_ROWS, LEVEL_DATA, MAP_OFFSET_X, MAP_OFFSET_Y, ROAD, ROAD_EDGE,
-                           TILE_SIZE, ROAD_EDGE_WIDTH, ROAD_WIDTH, TOWER_SLOT_RADIUS, START_POINT_RADIUS,
-                           END_POINT_RADIUS, START_COLOR, END_COLOR)
+from src.constants import (
+    GRID_COLS, GRID_LINE, GRID_ROWS, LEVEL_DATA, MAP_OFFSET_X, MAP_OFFSET_Y,
+    ROAD, ROAD_EDGE, TILE_SIZE, ROAD_EDGE_WIDTH, ROAD_WIDTH,
+    TOWER_SLOT_RADIUS, START_POINT_RADIUS, END_POINT_RADIUS,
+    START_COLOR, END_COLOR,
+)
+from src.map_generator import MapGenerator
 
 
 class GameMap:
-    def __init__(self, level_id=1):
-        self.level_id = level_id
-        self.level_data = LEVEL_DATA[level_id]
-        self.path_nodes = self.level_data["path_nodes"]
-        self.path_cells = self.make_path_cells()
+    def __init__(self, level_id=1, random_map=False):
+        self.random_map = random_map
+        if random_map:
+            gen = MapGenerator()
+            data = gen.generate()
+            self.path_nodes = data["path_nodes"]
+            self.path_cells = self.make_path_cells()
+            self.tower_slots = data["tower_slots"]
+        else:
+            self.level_data = LEVEL_DATA[level_id]
+            self.path_nodes = self.level_data["path_nodes"]
+            self.path_cells = self.make_path_cells()
+            self.tower_slots = self.make_tower_slots()
+
         self.path_points = [self.cell_center(cell) for cell in self.path_nodes]
-        self.tower_slots = self.make_tower_slots()
 
     def make_path_cells(self):
         cells = set()
@@ -34,9 +45,8 @@ class GameMap:
 
     def cell_center(self, cell):
         col, row = cell
-        x = MAP_OFFSET_X + col * TILE_SIZE + TILE_SIZE // 2
-        y = MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2
-        return x, y
+        return MAP_OFFSET_X + col * TILE_SIZE + TILE_SIZE // 2, \
+               MAP_OFFSET_Y + row * TILE_SIZE + TILE_SIZE // 2
 
     def get_cell_by_mouse(self, mouse_pos):
         x, y = mouse_pos
@@ -57,8 +67,7 @@ class GameMap:
                 rect = pygame.Rect(
                     MAP_OFFSET_X + col * TILE_SIZE,
                     MAP_OFFSET_Y + row * TILE_SIZE,
-                    TILE_SIZE,
-                    TILE_SIZE,
+                    TILE_SIZE, TILE_SIZE,
                 )
                 pygame.draw.rect(surface, GRID_LINE, rect, 1)
 
@@ -81,10 +90,6 @@ class GameMap:
     def draw_road(self, surface, color, width):
         radius = width // 2
         for start, end in zip(self.path_points, self.path_points[1:]):
-            shifted_start = (start[0], start[1])
-            shifted_end = (end[0], end[1])
-            pygame.draw.line(surface, color, shifted_start, shifted_end, width)
-
+            pygame.draw.line(surface, color, start, end, width)
         for point in self.path_points:
-            shifted_point = (point[0], point[1])
-            pygame.draw.circle(surface, color, shifted_point, radius)
+            pygame.draw.circle(surface, color, point, radius)

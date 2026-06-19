@@ -39,7 +39,7 @@ class Player:
         value = int(amount * self.reward_multiplier)
         self.coins += value
         self.meta_coins += max(1, value // META_COIN_RATIO)
-        self.save_data["meta_coins"] = self.meta_coins
+        self._save_data["meta_coins"] = self.meta_coins
 
     def spend(self, amount):
         if self.coins < amount:
@@ -62,5 +62,5 @@ class Player:
 
         self.meta_coins -= cost
         self.permanent_upgrades[key] += 1
-        self.save_data["meta_coins"] = self.meta_coins
+        self._save_data["meta_coins"] = self.meta_coins
         return True
