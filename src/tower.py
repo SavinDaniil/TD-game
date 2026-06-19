@@ -110,9 +110,10 @@ class Tower:
             self.attack_speed *= LEVEL_UP_SPEED_MULTIPLIER_LATE
 
         if self.level == 10:
-            self.select_ability(2)
+            self.select_remaining_ability()
         if self.level == 20:
-            self.selected_abilities.append("ultimate")
+            if "ultimate" not in self.selected_abilities:
+                self.selected_abilities.append("ultimate")
 
     def needs_ability_choice(self):
         if self.level >= 7 and len(self.selected_abilities) < 2:
@@ -129,6 +130,12 @@ class Tower:
             return
         self.selected_abilities.append(ability)
         self.apply_ability(ability)
+
+    def select_remaining_ability(self):
+        for index, ability in enumerate(self.ability_options):
+            if ability not in self.selected_abilities:
+                self.select_ability(index)
+                return
 
     def apply_ability(self, ability):
         effects = ABILITY_EFFECTS.get(ability, {})

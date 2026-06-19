@@ -14,16 +14,25 @@ class Button:
         self.text = text
         self.action = action
         self.color = color
+        self.disabled = False
+        self.selected = False
 
     def draw(self, surface, font, mouse_pos, active=False):
         color = self.color
-        if self.rect.collidepoint(mouse_pos):
+        text_color = TEXT
+        border_color = (78, 89, 118)
+        if self.disabled:
+            color = (28, 34, 52)
+            text_color = MUTED_TEXT
+        elif self.rect.collidepoint(mouse_pos):
             color = tuple(min(255, value + 24) for value in color)
-        if active:
+        if active or self.selected:
             color = (62, 83, 122)
+            text_color = TEXT
+            border_color = (110, 126, 166)
         pygame.draw.rect(surface, color, self.rect, border_radius=8)
-        pygame.draw.rect(surface, (78, 89, 118), self.rect, 1, border_radius=8)
-        draw_text(surface, font, self.text, TEXT, self.rect.center, center=True)
+        pygame.draw.rect(surface, border_color, self.rect, 1, border_radius=8)
+        draw_text(surface, font, self.text, text_color, self.rect.center, center=True)
 
 
 class Slider:
@@ -182,11 +191,15 @@ class UI:
             self.draw_pause_menu(surface, game, mouse_pos)
 
     def update_ability_button_texts(self, tower):
-        if not tower or tower.needs_ability_choice() != "normal":
+        if not tower:
             self.set_empty_ability_buttons()
             return
+        choice_available = tower.needs_ability_choice() == "normal"
         for index, button in enumerate(self.ability_buttons):
-            button.text = tower.ability_options[index]
+            ability = tower.ability_options[index]
+            button.text = ability
+            button.selected = ability in tower.selected_abilities
+            button.disabled = button.selected or not choice_available
 
     def draw_selected_tower(self, surface, game):
         tower = game.selected_tower
@@ -199,7 +212,7 @@ class UI:
         y += 28
         draw_text(surface, self.small_font, f"Lvl {tower.level}  Upg {tower.upgrade_level}/10", MUTED_TEXT,
                   (PANEL_X + 18, y))
-        self.draw_selected_abilities(surface, tower, y + 24)
+        self.draw_ultimate_status(surface, tower, y + 24)
         info = f"Dmg {tower.damage:.1f}  Rng {tower.range:.0f}  Spd {tower.attack_speed:.2f}"
         draw_text(surface, self.small_font, info, MUTED_TEXT, (PANEL_X + 18, 682))
         if tower.needs_ability_choice():
@@ -208,15 +221,17 @@ class UI:
     def set_empty_ability_buttons(self):
         for button in self.ability_buttons:
             button.text = "-"
+            button.disabled = True
+            button.selected = False
 
-    def draw_selected_abilities(self, surface, tower, y):
-        if not tower.selected_abilities:
-            draw_text(surface, self.small_font, "Abilities: none", MUTED_TEXT, (PANEL_X + 18, y))
-            return
-
-        draw_text(surface, self.small_font, "Abilities:", MUTED_TEXT, (PANEL_X + 18, y))
-        for index, ability in enumerate(tower.selected_abilities[:3]):
-            draw_text(surface, self.small_font, f"{index + 1}. {ability}", TEXT, (PANEL_X + 32, y + 19 + index * 18))
+    def draw_ultimate_status(self, surface, tower, y):
+        if "ultimate" in tower.selected_abilities:
+            text = "Ultimate: unlocked"
+            color = YELLOW
+        else:
+            text = f"Ultimate: unlocks at lvl 20 ({tower.level}/20)"
+            color = MUTED_TEXT
+        draw_text(surface, self.small_font, text, color, (PANEL_X + 18, y))
 
     def draw_messages(self, surface, game):
         if game.state == "game_over":
@@ -263,7 +278,7 @@ class UI:
 
     def handle_click(self, pos):
         for button in self.buttons:
-            if button.rect.collidepoint(pos):
+            if button.rect.collidepoint(pos) and not button.disabled:
                 return button.action
         return None
 
