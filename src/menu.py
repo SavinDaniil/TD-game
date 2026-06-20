@@ -129,7 +129,7 @@ class MainMenu:
     def buy_upgrade(self, key):
         self.player.buy_permanent_upgrade(key)
         self.save_data["meta_coins"] = self.player.meta_coins
-        self.save_data["upgrades"] = self.player.permanent_upgrades
+        self.save_data["upgrades"] = self.player.export_upgrades()
         save_json(self.save_data)
 
     def handle_main_event(self, event):

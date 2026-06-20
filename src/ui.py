@@ -3,8 +3,8 @@ import pygame
 from src.constants import (ABILITY_BUTTON_HEIGHT, ABILITY_BUTTON_SPACING, ABILITY_BUTTON_Y_START, BACKGROUND,
                            BUTTON_HEIGHT, BUTTON_Y_START, HEIGHT, MUTED_TEXT, PANEL, PANEL_LIGHT, PANEL_WIDTH, PANEL_X,
                            PAUSE_MENU_HEIGHT, PAUSE_MENU_WIDTH, TEXT, TOWER_BUTTON_HEIGHT, TOWER_BUTTON_SPACING,
-                           TOWER_BUTTON_Y_START, TOWER_DATA, TOWER_TYPES, UPGRADE_BUTTON_Y, UPGRADE_INFO, WIDTH,
-                           YELLOW)
+                           TOWER_BUTTON_Y_START, TOWER_DATA, TOWER_TYPES, TOWER_MAX_UPGRADE_LEVEL,
+                           TOWER_ULTIMATE_LEVEL, UPGRADE_BUTTON_Y, UPGRADE_INFO, WIDTH, YELLOW, SPEED_OPTIONS)
 from src.utils import clamp, draw_text
 
 
@@ -151,9 +151,8 @@ class UI:
         inner_x = menu_x + 40
         inner_width = PAUSE_MENU_WIDTH - 80
 
-        speed_values = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
         volume_values = [step / 10 for step in range(11)]
-        self.pause_speed_slider = Slider((inner_x, menu_y + 150, inner_width, 24), speed_values, 1.0)
+        self.pause_speed_slider = Slider((inner_x, menu_y + 150, inner_width, 24), SPEED_OPTIONS, 1.0)
         self.pause_volume_slider = Slider((inner_x, menu_y + 240, inner_width, 24), volume_values, 0.5)
         self.pause_buttons = [
             Button((inner_x, menu_y + 54, inner_width, 40), "Continue", "resume"),
@@ -198,7 +197,7 @@ class UI:
         for index, button in enumerate(self.ability_buttons):
             ability = tower.ability_options[index]
             button.text = ability
-            button.selected = ability in tower.selected_abilities
+            button.selected = tower.has_ability(ability)
             button.disabled = button.selected or not choice_available
 
     def draw_selected_tower(self, surface, game):
@@ -210,7 +209,8 @@ class UI:
         y = 414
         draw_text(surface, self.font, f"Selected: {tower.name}", TEXT, (PANEL_X + 18, y))
         y += 28
-        draw_text(surface, self.small_font, f"Lvl {tower.level}  Upg {tower.upgrade_level}/10", MUTED_TEXT,
+        draw_text(surface, self.small_font, f"Lvl {tower.level}  Upg {tower.upgrade_level}/{TOWER_MAX_UPGRADE_LEVEL}",
+                  MUTED_TEXT,
                   (PANEL_X + 18, y))
         self.draw_ultimate_status(surface, tower, y + 24)
         info = f"Dmg {tower.damage:.1f}  Rng {tower.range:.0f}  Spd {tower.attack_speed:.2f}"
@@ -225,11 +225,11 @@ class UI:
             button.selected = False
 
     def draw_ultimate_status(self, surface, tower, y):
-        if "ultimate" in tower.selected_abilities:
+        if tower.has_ultimate():
             text = "Ultimate: unlocked"
             color = YELLOW
         else:
-            text = f"Ultimate: unlocks at lvl 20 ({tower.level}/20)"
+            text = f"Ultimate: unlocks at lvl {TOWER_ULTIMATE_LEVEL} ({tower.level}/{TOWER_ULTIMATE_LEVEL})"
             color = MUTED_TEXT
         draw_text(surface, self.small_font, text, color, (PANEL_X + 18, y))
 
@@ -310,7 +310,7 @@ class UI:
         y = 140
         rects = {}
         for key, info in UPGRADE_INFO.items():
-            level = player.permanent_upgrades[key]
+            level = player.get_upgrade_level(key)
             cost = info["base_cost"] + info["step"] * level
             text = f"{info['name']}  Lv {level}/{info['max']}  Cost {cost}"
             rect = pygame.Rect(upgrade_x, y, upgrade_width, 42)

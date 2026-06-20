@@ -22,6 +22,7 @@ MUSIC_DIR = os.path.join("data", "music")
 START_HP = 100
 START_COINS = 250
 MAX_WAVE = 20
+SPEED_OPTIONS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
 
 LEVEL_DATA = {
     1: {
@@ -200,7 +201,7 @@ TOWER_DATA = {
         "name": "Cannon",
         "cost": 100,
         "damage": 22,
-        "range": 130,
+        "range": 100,
         "attack_speed": 0.55,
         "target_type": "ground",
         "upgrade_cost": 80,
@@ -220,7 +221,7 @@ TOWER_DATA = {
         "name": "Anti-air",
         "cost": 85,
         "damage": 18,
-        "range": 180,
+        "range": 150,
         "attack_speed": 1.4,
         "target_type": "air",
         "upgrade_cost": 75,
@@ -230,7 +231,7 @@ TOWER_DATA = {
         "name": "Splash",
         "cost": 110,
         "damage": 8,
-        "range": 100,
+        "range": 150,
         "attack_speed": 0.8,
         "target_type": "ground",
         "upgrade_cost": 85,
@@ -266,32 +267,32 @@ UPGRADE_INFO = {
     },
 }
 
-# Масштабирование врагов по волнам
+# Усиление врагов
 WAVE_HP_SCALE = 0.13
 WAVE_SPEED_SCALE = 0.015
 WAVE_REWARD_SCALE = 0.07
 
-# Множители прокачки башен
+# Усиление башен
 LEVEL_UP_DAMAGE_MULTIPLIER_EARLY = 1.05
 LEVEL_UP_DAMAGE_MULTIPLIER_LATE = 1.01
 LEVEL_UP_RANGE_MULTIPLIER = 1.01
 LEVEL_UP_SPEED_MULTIPLIER_EARLY = 1.015
 LEVEL_UP_SPEED_MULTIPLIER_LATE = 1.01
 
-# Множители апгрейдов
+# Прокачка башен
 UPGRADE_DAMAGE_MULTIPLIER = 1.18
-UPGRADE_RANGE_MULTIPLIER = 1.09
-UPGRADE_SPEED_MULTIPLIER = 1.09
-UPGRADE_COST_MULTIPLIER = 1.52
+UPGRADE_RANGE_MULTIPLIER = 1.05
+UPGRADE_SPEED_MULTIPLIER = 1.07
+UPGRADE_COST_MULTIPLIER = 1.42
 
-# Параметры снарядов
+# Настройки снарядов
 DIRECTIONAL_LIFETIME = 1.5
 HOMING_LIFETIME = 3.0
 HIT_DISTANCE = 14
 EXP_DAMAGE_RATIO = 0.12
 EXP_KILL_BONUS = 12
 
-# Параметры волн
+# Настройки волн
 BASE_SPAWN_DELAY = 0.65
 BASE_ENEMY_COUNT = 7
 FAST_WAVE_THRESHOLD = 3
@@ -299,7 +300,7 @@ STRONG_WAVE_THRESHOLD = 6
 ARMORED_WAVE_THRESHOLD = 8
 AIR_WAVE_THRESHOLD = 10
 
-# Параметры карты
+# Настройки отрисовки карты
 ROAD_EDGE_WIDTH = 51
 ROAD_WIDTH = 39
 TOWER_SLOT_RADIUS = 15
@@ -308,7 +309,7 @@ END_POINT_RADIUS = 15
 START_COLOR = (80, 245, 150)
 END_COLOR = (245, 80, 115)
 
-# Параметры игрока
+# Настройки игрока
 HP_PER_UPGRADE = 12
 COINS_PER_UPGRADE = 30
 DAMAGE_BONUS_PER_LEVEL = 0.04
@@ -316,7 +317,7 @@ SPEED_BONUS_PER_LEVEL = 0.035
 REWARD_BONUS_PER_LEVEL = 0.08
 META_COIN_RATIO = 3
 
-# Параметры UI
+# Настройки UI
 BUTTON_Y_START = 112
 BUTTON_HEIGHT = 42
 TOWER_BUTTON_Y_START = 194
@@ -332,14 +333,31 @@ BACK_BUTTON_HEIGHT = 40
 PAUSE_MENU_WIDTH = 440
 PAUSE_MENU_HEIGHT = 360
 
-# Параметры башен
+# Настройки башен
 BASE_SPLASH_RADIUS = 55
 BASE_SLOW_FACTOR = 0.65
 BASE_SLOW_DURATION = 1.0
 BASE_PROJECTILE_COUNT = 8
+BASE_PROJECTILE_SPEED = 330
+SNIPER_PROJECTILE_SPEED = 560
+CANNON_PROJECTILE_SPEED = 260
+ANTI_AIR_PROJECTILE_SPEED = 430
+TOWER_INITIAL_COOLDOWN_MAX = 0.25
+TOWER_MAX_LEVEL = 20
+TOWER_MAX_UPGRADE_LEVEL = 10
+TOWER_FIRST_ABILITY_LEVEL = 4
+TOWER_SECOND_ABILITY_LEVEL = 7
+TOWER_AUTO_ABILITY_LEVEL = 10
+TOWER_ULTIMATE_LEVEL = 20
 TOWER_DRAW_RADIUS = 25
 TOWER_DRAW_INNER_RADIUS = 22
 TOWER_SELECTED_RADIUS = 27
+TOWER_RANGE_FILL_ALPHA = 34
+TOWER_RANGE_BORDER_ALPHA = 90
+BUILD_PREVIEW_FILL_ALPHA = 28
+BUILD_PREVIEW_BORDER_ALPHA = 105
+BUILD_PREVIEW_CORE_ALPHA = 85
+BUILD_PREVIEW_CORE_RADIUS = 24
 
 # Шрифты
 TITLE_FONT_SIZE = 42

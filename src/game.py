@@ -1,47 +1,43 @@
-import random
 import pygame
-from src.constants import BACKGROUND, FPS, LEVEL_DATA, TOWER_DATA
-from src.map import GameMap
-from src.player import Player
-from src.tower import TOWER_CLASSES
+
+from src.constants import (
+    BACKGROUND,
+    BUILD_PREVIEW_BORDER_ALPHA,
+    BUILD_PREVIEW_CORE_ALPHA,
+    BUILD_PREVIEW_CORE_RADIUS,
+    BUILD_PREVIEW_FILL_ALPHA,
+    FPS,
+    SPEED_OPTIONS,
+    TOWER_DATA,
+)
+from src.game_session import GameSession
 from src.ui import UI
 from src.utils import load_save, save_json
-from src.wave_manager import WaveManager
 
 
 class Game:
-    SPEED_OPTIONS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-
     def __init__(self, screen, return_to_menu, music_manager, level_id=1, random_map=False):
         self.screen = screen
         self.return_to_menu = return_to_menu
         self.music_manager = music_manager
-        self.random_map = random_map
         self.clock = pygame.time.Clock()
         self.save_data = load_save()
-        self.player = Player(self.save_data)
-
-        if random_map:
-            self.max_waves = random.randint(15, 30)
-            self.enemy_multiplier = 1.0
-            self.map = GameMap(random_map=True)
-        else:
-            self.level_data = LEVEL_DATA[level_id]
-            self.max_waves = self.level_data["waves"]
-            self.enemy_multiplier = self.level_data["enemy_multiplier"]
-            self.map = GameMap(level_id=level_id)
-
-        self.wave_manager = WaveManager(self.map, self.max_waves, self.enemy_multiplier)
+        self.session = GameSession(self.save_data, level_id=level_id, random_map=random_map)
         self.ui = UI()
-        self.enemies = []
-        self.towers = []
-        self.projectiles = []
         self.selected_tower_type = None
         self.selected_tower = None
         self.paused = False
         self.running = True
         self.state = "playing"
         self.game_speed = self.save_data.get("game_speed", 1.0)
+
+    @property
+    def player(self):
+        return self.session.player
+
+    @property
+    def wave_manager(self):
+        return self.session.wave_manager
 
     def run(self):
         while self.running:
@@ -82,24 +78,28 @@ class Game:
             self.running = False
             self.return_to_menu()
             return
+
         action = self.ui.handle_click(pos)
         if action:
             self.handle_ui_action(action)
             return
-        cell = self.map.get_cell_by_mouse(pos)
+
+        cell = self.session.map.get_cell_by_mouse(pos)
         if not cell:
             return
-        tower = self.get_tower_at_cell(cell)
+
+        tower = self.session.get_tower_at_cell(cell)
         if tower:
             self.selected_tower = tower
             self.selected_tower_type = None
             return
+
         if self.selected_tower_type:
             self.try_build_tower(cell)
 
     def handle_ui_action(self, action):
         if action == "start_wave":
-            self.wave_manager.start_wave()
+            self.session.start_wave()
         elif action == "resume":
             self.paused = False
         elif action == "return_to_menu":
@@ -107,7 +107,7 @@ class Game:
             self.return_to_menu()
         elif action.startswith("set_speed:"):
             speed = float(action.split(":")[1])
-            if speed in self.SPEED_OPTIONS:
+            if speed in SPEED_OPTIONS:
                 self.game_speed = speed
         elif action == "upgrade" and self.selected_tower:
             self.selected_tower.upgrade(self.player)
@@ -116,7 +116,7 @@ class Game:
             self.selected_tower = None
         elif action.startswith("ability:") and self.selected_tower:
             index = int(action.split(":")[1])
-            if self.selected_tower.needs_ability_choice() == "normal":
+            if self.selected_tower.can_choose_ability():
                 self.selected_tower.select_ability(index)
 
     def handle_pause_result(self, result):
@@ -141,62 +141,34 @@ class Game:
             save_json(self.save_data)
 
     def try_build_tower(self, cell):
-        if not self.map.can_place_tower(cell, self.towers):
-            return
-        data = TOWER_DATA[self.selected_tower_type]
-        if not self.player.spend(data["cost"]):
-            return
-        tower_class = TOWER_CLASSES[self.selected_tower_type]
-        tower = tower_class(cell, self.map.cell_center(cell), self.player)
-        self.towers.append(tower)
-        self.selected_tower = tower
-        self.selected_tower_type = None
-
-    def get_tower_at_cell(self, cell):
-        for tower in self.towers:
-            if tower.cell == cell:
-                return tower
-        return None
+        tower = self.session.build_tower(self.selected_tower_type, cell)
+        if tower:
+            self.selected_tower = tower
+            self.selected_tower_type = None
 
     def update(self, dt):
-        self.wave_manager.update(dt, self.enemies)
-        for enemy in list(self.enemies):
-            enemy.update(dt)
-            if enemy.reached_base:
-                self.player.take_damage(enemy.hp)
-            if not enemy.alive:
-                if not enemy.reached_base:
-                    self.player.add_kill_reward(enemy.reward)
-                self.enemies.remove(enemy)
-        for tower in self.towers:
-            tower.update(dt, self.enemies, self.projectiles, self.map, self.towers)
-        for projectile in list(self.projectiles):
-            projectile.update(dt, self.enemies)
-            if not projectile.alive:
-                self.projectiles.remove(projectile)
-        if self.player.hp <= 0:
-            self.finish_run("game_over")
-        elif self.wave_manager.is_finished(self.enemies):
-            self.finish_run("victory")
+        outcome = self.session.update(dt)
+        if outcome:
+            self.finish_run(outcome)
 
     def finish_run(self, state):
         self.state = state
-        self.save_data["meta_coins"] = self.player.meta_coins
+        self.session.sync_progress_to_save()
         save_json(self.save_data)
 
     def draw(self):
         self.screen.fill(BACKGROUND)
         mouse_pos = pygame.mouse.get_pos()
-        mouse_cell = self.map.get_cell_by_mouse(mouse_pos)
-        self.map.draw(self.screen, mouse_cell, self.towers)
+        mouse_cell = self.session.map.get_cell_by_mouse(mouse_pos)
+        self.session.map.draw(self.screen, mouse_cell, self.session.towers)
         self.draw_build_preview(mouse_cell)
         if self.selected_tower:
             self.selected_tower.draw_range(self.screen)
-        for tower in self.towers:
+        for tower in self.session.towers:
             tower.draw(self.screen, tower is self.selected_tower)
-        for enemy in self.enemies:
+        for enemy in self.session.enemies:
             enemy.draw(self.screen)
-        for projectile in self.projectiles:
+        for projectile in self.session.projectiles:
             projectile.draw(self.screen)
         self.ui.draw(self.screen, self, mouse_pos)
         pygame.display.flip()
@@ -204,12 +176,25 @@ class Game:
     def draw_build_preview(self, mouse_cell):
         if not self.selected_tower_type or not mouse_cell:
             return
-        if not self.map.can_place_tower(mouse_cell, self.towers):
+        if not self.session.map.can_place_tower(mouse_cell, self.session.towers):
             return
+
         data = TOWER_DATA[self.selected_tower_type]
-        center = self.map.cell_center(mouse_cell)
+        center = self.session.map.cell_center(mouse_cell)
         preview = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
-        pygame.draw.circle(preview, (*data["color"][:3], 28), center, int(data["range"]))
-        pygame.draw.circle(preview, (*data["color"][:3], 105), center, int(data["range"]), 2)
-        pygame.draw.circle(preview, (*data["color"][:3], 85), center, 24, 2)
+        pygame.draw.circle(preview, (*data["color"][:3], BUILD_PREVIEW_FILL_ALPHA), center, int(data["range"]))
+        pygame.draw.circle(
+            preview,
+            (*data["color"][:3], BUILD_PREVIEW_BORDER_ALPHA),
+            center,
+            int(data["range"]),
+            2,
+        )
+        pygame.draw.circle(
+            preview,
+            (*data["color"][:3], BUILD_PREVIEW_CORE_ALPHA),
+            center,
+            BUILD_PREVIEW_CORE_RADIUS,
+            2,
+        )
         self.screen.blit(preview, (0, 0))
