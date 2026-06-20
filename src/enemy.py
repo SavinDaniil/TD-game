@@ -1,9 +1,5 @@
-import math
-
-import pygame
-
-from src.constants import RED, WHITE, WAVE_HP_SCALE, WAVE_SPEED_SCALE, WAVE_REWARD_SCALE
-from src.utils import distance, regular_polygon
+from src.constants import WAVE_HP_SCALE, WAVE_SPEED_SCALE, WAVE_REWARD_SCALE
+from src.utils import distance
 
 
 ENEMY_STATS = {
@@ -125,33 +121,3 @@ class Enemy:
         if multiplier < self.slow_multiplier:
             self.slow_multiplier = multiplier
             self.slow_timer = duration
-
-    def draw(self, surface):
-        x, y = int(self.position[0]), int(self.position[1])
-        if self.enemy_type == "normal":
-            pygame.draw.circle(surface, self.color, (x, y), 15)
-        elif self.enemy_type == "fast":
-            points = regular_polygon((x, y), 17, 3, -math.pi / 2)
-            pygame.draw.polygon(surface, self.color, points)
-        elif self.enemy_type == "strong":
-            pygame.draw.rect(surface, self.color, (x - 15, y - 15, 30, 30))
-        elif self.enemy_type == "armored":
-            pygame.draw.polygon(surface, self.color, regular_polygon((x, y), 18, 6))
-        elif self.enemy_type == "air":
-            points = [(x, y - 18), (x + 18, y), (x, y + 18), (x - 18, y)]
-            pygame.draw.polygon(surface, self.color, points)
-        else:
-            pygame.draw.polygon(surface, self.color, regular_polygon((x, y), 28, 8))
-            pygame.draw.circle(surface, RED, (x, y), 13, 2)
-
-        self.draw_hp_bar(surface, x, y)
-
-    def draw_hp_bar(self, surface, x, y):
-        width = 64 if self.enemy_type == "boss" else 34
-        height = 7 if self.enemy_type == "boss" else 5
-        top = y - 43 if self.enemy_type == "boss" else y - 27
-        ratio = max(0, self.hp / self.max_hp)
-        back = pygame.Rect(x - width // 2, top, width, height)
-        front = pygame.Rect(x - width // 2, top, int(width * ratio), height)
-        pygame.draw.rect(surface, (45, 47, 60), back)
-        pygame.draw.rect(surface, WHITE if ratio > 0.4 else RED, front)

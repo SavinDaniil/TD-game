@@ -118,11 +118,7 @@ class UI:
 
     def build_buttons(self):
         self.buttons = [
-            Button(
-                (PANEL_X + 18, BUTTON_Y_START, PANEL_WIDTH - 36, BUTTON_HEIGHT),
-                "Start Wave",
-                "start_wave",
-            )
+            Button((PANEL_X + 18, BUTTON_Y_START, PANEL_WIDTH - 36, BUTTON_HEIGHT), "Start Wave", "start_wave")
         ]
         y = TOWER_BUTTON_Y_START
         for tower_type in TOWER_TYPES:
@@ -136,12 +132,8 @@ class UI:
             Button((PANEL_X + 18, UPGRADE_BUTTON_Y, PANEL_WIDTH - 36, 36), "Upgrade", "upgrade")
         )
         for index in range(3):
-            rect = (
-                PANEL_X + 18,
-                ABILITY_BUTTON_Y_START + index * ABILITY_BUTTON_SPACING,
-                PANEL_WIDTH - 36,
-                ABILITY_BUTTON_HEIGHT,
-            )
+            rect = (PANEL_X + 18, ABILITY_BUTTON_Y_START + index * ABILITY_BUTTON_SPACING, PANEL_WIDTH - 36,
+                    ABILITY_BUTTON_HEIGHT)
             self.ability_buttons.append(Button(rect, f"Ability {index + 1}", f"ability:{index}"))
         self.buttons += self.ability_buttons
 
@@ -168,13 +160,8 @@ class UI:
 
         draw_text(surface, self.font, f"HP: {game.player.hp}/{game.player.max_hp}", TEXT, (PANEL_X + 18, 20))
         draw_text(surface, self.font, f"Coins: {game.player.coins}", YELLOW, (PANEL_X + 18, 52))
-        draw_text(
-            surface,
-            self.font,
-            f"Wave: {game.wave_manager.current_wave}/{game.wave_manager.max_wave}",
-            TEXT,
-            (PANEL_X + 18, 84),
-        )
+        draw_text(surface, self.font, f"Wave: {game.wave_manager.current_wave}/{game.wave_manager.max_wave}", TEXT,
+                  (PANEL_X + 18, 84))
 
         for button in self.buttons:
             active = False
@@ -210,8 +197,7 @@ class UI:
         draw_text(surface, self.font, f"Selected: {tower.name}", TEXT, (PANEL_X + 18, y))
         y += 28
         draw_text(surface, self.small_font, f"Lvl {tower.level}  Upg {tower.upgrade_level}/{TOWER_MAX_UPGRADE_LEVEL}",
-                  MUTED_TEXT,
-                  (PANEL_X + 18, y))
+                  MUTED_TEXT, (PANEL_X + 18, y))
         self.draw_ultimate_status(surface, tower, y + 24)
         info = f"Dmg {tower.damage:.1f}  Rng {tower.range:.0f}  Spd {tower.attack_speed:.2f}"
         draw_text(surface, self.small_font, info, MUTED_TEXT, (PANEL_X + 18, 682))
@@ -244,12 +230,8 @@ class UI:
         overlay.fill((0, 0, 0, 165))
         surface.blit(overlay, (0, 0))
 
-        menu_rect = pygame.Rect(
-            (WIDTH - PAUSE_MENU_WIDTH) // 2,
-            (HEIGHT - PAUSE_MENU_HEIGHT) // 2,
-            PAUSE_MENU_WIDTH,
-            PAUSE_MENU_HEIGHT,
-        )
+        menu_rect = pygame.Rect((WIDTH - PAUSE_MENU_WIDTH) // 2, (HEIGHT - PAUSE_MENU_HEIGHT) // 2,
+                                PAUSE_MENU_WIDTH, PAUSE_MENU_HEIGHT)
         pygame.draw.rect(surface, PANEL, menu_rect, border_radius=14)
         pygame.draw.rect(surface, (78, 89, 118), menu_rect, 2, border_radius=14)
 

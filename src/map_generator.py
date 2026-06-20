@@ -72,15 +72,15 @@ class MapGenerator:
     def _generate_tower_slots(self, path):
         path_set = set(path)
         valid_slots = []
-        for r in range(GRID_ROWS):
-            for c in range(GRID_COLS):
-                if (c, r) in path_set:
+        for row in range(GRID_ROWS):
+            for col in range(GRID_COLS):
+                if (col, row) in path_set:
                     continue
 
                 for path_col, path_row in path_set:
-                    dist = abs(c - path_col) + abs(r - path_row)
+                    dist = abs(col - path_col) + abs(row - path_row)
                     if 0 < dist <= 3:
-                        valid_slots.append((c, r))
+                        valid_slots.append((col, row))
                         break
 
         valid_slots = list(set(valid_slots))

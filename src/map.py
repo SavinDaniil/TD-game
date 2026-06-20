@@ -1,10 +1,7 @@
 import pygame
-from src.constants import (
-    GRID_COLS, GRID_LINE, GRID_ROWS, LEVEL_DATA, MAP_OFFSET_X, MAP_OFFSET_Y,
-    ROAD, ROAD_EDGE, TILE_SIZE, ROAD_EDGE_WIDTH, ROAD_WIDTH,
-    TOWER_SLOT_RADIUS, START_POINT_RADIUS, END_POINT_RADIUS,
-    START_COLOR, END_COLOR,
-)
+from src.constants import (GRID_COLS, GRID_LINE, GRID_ROWS, LEVEL_DATA, MAP_OFFSET_X, MAP_OFFSET_Y, ROAD, ROAD_EDGE,
+                           TILE_SIZE, ROAD_EDGE_WIDTH, ROAD_WIDTH, TOWER_SLOT_RADIUS, START_POINT_RADIUS,
+                           END_POINT_RADIUS, START_COLOR, END_COLOR)
 from src.map_generator import MapGenerator
 
 
@@ -64,11 +61,7 @@ class GameMap:
     def draw(self, surface, mouse_cell, towers):
         for row in range(GRID_ROWS):
             for col in range(GRID_COLS):
-                rect = pygame.Rect(
-                    MAP_OFFSET_X + col * TILE_SIZE,
-                    MAP_OFFSET_Y + row * TILE_SIZE,
-                    TILE_SIZE, TILE_SIZE,
-                )
+                rect = pygame.Rect(MAP_OFFSET_X + col * TILE_SIZE, MAP_OFFSET_Y + row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                 pygame.draw.rect(surface, GRID_LINE, rect, 1)
 
         self.draw_road(surface, ROAD_EDGE, ROAD_EDGE_WIDTH)

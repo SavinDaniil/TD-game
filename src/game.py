@@ -1,16 +1,9 @@
 import pygame
 
-from src.constants import (
-    BACKGROUND,
-    BUILD_PREVIEW_BORDER_ALPHA,
-    BUILD_PREVIEW_CORE_ALPHA,
-    BUILD_PREVIEW_CORE_RADIUS,
-    BUILD_PREVIEW_FILL_ALPHA,
-    FPS,
-    SPEED_OPTIONS,
-    TOWER_DATA,
-)
+from src.constants import (BACKGROUND, BUILD_PREVIEW_BORDER_ALPHA, BUILD_PREVIEW_CORE_ALPHA, BUILD_PREVIEW_CORE_RADIUS,
+                           BUILD_PREVIEW_FILL_ALPHA, FPS, SPEED_OPTIONS, TOWER_DATA)
 from src.game_session import GameSession
+from src.renderers import draw_enemy, draw_projectile, draw_tower, draw_tower_range
 from src.ui import UI
 from src.utils import load_save, save_json
 
@@ -64,14 +57,19 @@ class Game:
                 continue
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.handle_click(event.pos)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                self.clear_selection()
 
     def handle_key(self, key):
         if key == pygame.K_ESCAPE and self.state == "playing":
             self.paused = not self.paused
-            self.selected_tower = None
-            self.selected_tower_type = None
+            self.clear_selection()
         elif key == pygame.K_p:
             self.paused = not self.paused
+
+    def clear_selection(self):
+        self.selected_tower = None
+        self.selected_tower_type = None
 
     def handle_click(self, pos):
         if self.state in ("game_over", "victory"):
@@ -163,13 +161,13 @@ class Game:
         self.session.map.draw(self.screen, mouse_cell, self.session.towers)
         self.draw_build_preview(mouse_cell)
         if self.selected_tower:
-            self.selected_tower.draw_range(self.screen)
+            draw_tower_range(self.screen, self.selected_tower)
         for tower in self.session.towers:
-            tower.draw(self.screen, tower is self.selected_tower)
+            draw_tower(self.screen, tower, tower is self.selected_tower)
         for enemy in self.session.enemies:
-            enemy.draw(self.screen)
+            draw_enemy(self.screen, enemy)
         for projectile in self.session.projectiles:
-            projectile.draw(self.screen)
+            draw_projectile(self.screen, projectile)
         self.ui.draw(self.screen, self, mouse_pos)
         pygame.display.flip()
 
@@ -183,18 +181,8 @@ class Game:
         center = self.session.map.cell_center(mouse_cell)
         preview = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
         pygame.draw.circle(preview, (*data["color"][:3], BUILD_PREVIEW_FILL_ALPHA), center, int(data["range"]))
-        pygame.draw.circle(
-            preview,
-            (*data["color"][:3], BUILD_PREVIEW_BORDER_ALPHA),
-            center,
-            int(data["range"]),
-            2,
-        )
-        pygame.draw.circle(
-            preview,
-            (*data["color"][:3], BUILD_PREVIEW_CORE_ALPHA),
-            center,
-            BUILD_PREVIEW_CORE_RADIUS,
-            2,
-        )
+        pygame.draw.circle(preview, (*data["color"][:3], BUILD_PREVIEW_BORDER_ALPHA), center,
+                           int(data["range"]), 2)
+        pygame.draw.circle(preview, (*data["color"][:3], BUILD_PREVIEW_CORE_ALPHA), center,
+                           BUILD_PREVIEW_CORE_RADIUS, 2)
         self.screen.blit(preview, (0, 0))

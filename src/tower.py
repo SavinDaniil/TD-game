@@ -1,43 +1,16 @@
 import math
 import random
 
-import pygame
-
-from src.constants import (
-    ANTI_AIR_PROJECTILE_SPEED,
-    BASE_PROJECTILE_COUNT,
-    BASE_PROJECTILE_SPEED,
-    BASE_SLOW_DURATION,
-    BASE_SLOW_FACTOR,
-    BASE_SPLASH_RADIUS,
-    CANNON_PROJECTILE_SPEED,
-    LEVEL_UP_DAMAGE_MULTIPLIER_EARLY,
-    LEVEL_UP_DAMAGE_MULTIPLIER_LATE,
-    LEVEL_UP_RANGE_MULTIPLIER,
-    LEVEL_UP_SPEED_MULTIPLIER_EARLY,
-    LEVEL_UP_SPEED_MULTIPLIER_LATE,
-    SNIPER_PROJECTILE_SPEED,
-    TOWER_AUTO_ABILITY_LEVEL,
-    TOWER_DATA,
-    TOWER_DRAW_INNER_RADIUS,
-    TOWER_DRAW_RADIUS,
-    TOWER_FIRST_ABILITY_LEVEL,
-    TOWER_INITIAL_COOLDOWN_MAX,
-    TOWER_MAX_LEVEL,
-    TOWER_MAX_UPGRADE_LEVEL,
-    TOWER_RANGE_BORDER_ALPHA,
-    TOWER_RANGE_FILL_ALPHA,
-    TOWER_SECOND_ABILITY_LEVEL,
-    TOWER_SELECTED_RADIUS,
-    TOWER_ULTIMATE_LEVEL,
-    UPGRADE_COST_MULTIPLIER,
-    UPGRADE_DAMAGE_MULTIPLIER,
-    UPGRADE_RANGE_MULTIPLIER,
-    UPGRADE_SPEED_MULTIPLIER,
-    WHITE,
-)
+from src.constants import (ANTI_AIR_PROJECTILE_SPEED, BASE_PROJECTILE_COUNT, BASE_PROJECTILE_SPEED, BASE_SLOW_DURATION,
+                           BASE_SLOW_FACTOR, BASE_SPLASH_RADIUS, CANNON_PROJECTILE_SPEED,
+                           LEVEL_UP_DAMAGE_MULTIPLIER_EARLY, LEVEL_UP_DAMAGE_MULTIPLIER_LATE, LEVEL_UP_RANGE_MULTIPLIER,
+                           LEVEL_UP_SPEED_MULTIPLIER_EARLY, LEVEL_UP_SPEED_MULTIPLIER_LATE, SNIPER_PROJECTILE_SPEED,
+                           TOWER_AUTO_ABILITY_LEVEL, TOWER_DATA, TOWER_FIRST_ABILITY_LEVEL, TOWER_INITIAL_COOLDOWN_MAX,
+                           TOWER_MAX_LEVEL, TOWER_MAX_UPGRADE_LEVEL, TOWER_SECOND_ABILITY_LEVEL, TOWER_ULTIMATE_LEVEL,
+                           UPGRADE_COST_MULTIPLIER, UPGRADE_DAMAGE_MULTIPLIER, UPGRADE_RANGE_MULTIPLIER,
+                           UPGRADE_SPEED_MULTIPLIER)
 from src.projectile import Projectile
-from src.utils import distance, regular_polygon
+from src.utils import distance
 
 ABILITY_TEXT = [
     "Faster Attack",
@@ -46,9 +19,9 @@ ABILITY_TEXT = [
 ]
 
 ABILITY_EFFECTS = {
-    "Faster Attack": {"attack_speed": 1.15},
-    "More Damage": {"damage": 1.18},
-    "Longer Range": {"range": 1.15},
+    "Faster Attack": {"attack_speed": 1.2},
+    "More Damage": {"damage": 1.25},
+    "Longer Range": {"range": 1.2},
 }
 
 
@@ -143,17 +116,8 @@ class Tower:
 
     def shoot(self, target, session):
         damage = self.damage * self.power_multiplier
-        session.projectiles.append(
-            Projectile(
-                self.position,
-                target,
-                self.projectile_speed,
-                damage,
-                self.color,
-                owner=self,
-                damage_type=self.tower_type,
-            )
-        )
+        session.projectiles.append(Projectile(self.position, target, self.projectile_speed, damage, self.color,
+                                              owner=self, damage_type=self.tower_type))
 
     def gain_exp(self, amount):
         if self.level >= TOWER_MAX_LEVEL:
@@ -214,31 +178,9 @@ class Tower:
         self.upgrade_cost = int(self.upgrade_cost * UPGRADE_COST_MULTIPLIER)
         return True
 
-    def draw_range(self, surface):
-        alpha = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-        center = (int(self.position[0]), int(self.position[1]))
-        pygame.draw.circle(alpha, (*self.color[:3], TOWER_RANGE_FILL_ALPHA), center, int(self.range))
-        pygame.draw.circle(alpha, (*self.color[:3], TOWER_RANGE_BORDER_ALPHA), center, int(self.range), 2)
-        surface.blit(alpha, (0, 0))
-
-    def draw(self, surface, selected=False):
-        pygame.draw.circle(surface, (10, 13, 24), self.position, TOWER_DRAW_RADIUS)
-        self.draw_body(surface)
-        if selected:
-            pygame.draw.circle(surface, WHITE, self.position, TOWER_SELECTED_RADIUS, 2)
-
-    def draw_body(self, surface):
-        pygame.draw.circle(surface, self.color, self.position, TOWER_DRAW_INNER_RADIUS, 3)
-
 
 class BasicTower(Tower):
     tower_type = "basic"
-
-    def draw_body(self, surface):
-        points = regular_polygon(self.position, 24, 4, math.pi / 4)
-        pygame.draw.polygon(surface, self.color, points)
-        pygame.draw.circle(surface, (20, 35, 48), self.position, 10)
-        pygame.draw.circle(surface, WHITE, self.position, 5)
 
 
 class SniperTower(Tower):
@@ -248,11 +190,8 @@ class SniperTower(Tower):
     def shoot(self, target, session):
         damage = self.damage
         if self.has_ultimate():
-            strongest = max(
-                [enemy for enemy in session.enemies if enemy.alive and not enemy.is_flying],
-                key=lambda enemy: enemy.hp,
-                default=target,
-            )
+            strongest = max([enemy for enemy in session.enemies if enemy.alive and not enemy.is_flying],
+                            key=lambda enemy: enemy.hp, default=target)
             if strongest.enemy_type == "boss" and random.random() < 0.2:
                 damage *= 4
                 target = strongest
@@ -268,13 +207,6 @@ class SniperTower(Tower):
                 damage_type="sniper",
             )
         )
-
-    def draw_body(self, surface):
-        x, y = int(self.position[0]), int(self.position[1])
-        pygame.draw.polygon(surface, self.color, regular_polygon(self.position, 26, 3, -math.pi / 2))
-        barrel = [(x - 3, y + 11), (x - 3, y - 17), (x + 3, y - 17), (x + 3, y + 11)]
-        pygame.draw.polygon(surface, WHITE, barrel)
-        pygame.draw.line(surface, (36, 72, 44), (x, y - 14), (x, y + 8), 1)
 
 
 class CannonTower(Tower):
@@ -308,10 +240,6 @@ class CannonTower(Tower):
             )
         )
 
-    def draw_body(self, surface):
-        pygame.draw.polygon(surface, self.color, regular_polygon(self.position, 25, 5))
-        pygame.draw.polygon(surface, (255, 154, 154), regular_polygon(self.position, 12, 5))
-
 
 class FreezeTower(Tower):
     tower_type = "freeze"
@@ -331,20 +259,6 @@ class FreezeTower(Tower):
                 if self.damage > 0:
                     dealt = enemy.take_damage(self.damage * dt, "freeze")
                     self.gain_exp(dealt * 0.08)
-
-    def draw_body(self, surface):
-        pygame.draw.polygon(surface, self.color, regular_polygon(self.position, 25, 6, math.pi / 6))
-        for angle in range(0, 180, 45):
-            rad = math.radians(angle)
-            dx = math.cos(rad) * 14
-            dy = math.sin(rad) * 14
-            pygame.draw.line(
-                surface,
-                WHITE,
-                (self.position[0] - dx, self.position[1] - dy),
-                (self.position[0] + dx, self.position[1] + dy),
-                2,
-            )
 
 
 class AntiAirTower(Tower):
@@ -372,19 +286,6 @@ class AntiAirTower(Tower):
                     damage_type="air",
                 )
             )
-
-    def draw_body(self, surface):
-        pygame.draw.polygon(surface, self.color, regular_polygon(self.position, 24, 6))
-        arrow = [
-            (self.position[0], self.position[1] - 15),
-            (self.position[0] + 10, self.position[1] + 4),
-            (self.position[0] + 3, self.position[1] + 4),
-            (self.position[0] + 3, self.position[1] + 15),
-            (self.position[0] - 3, self.position[1] + 15),
-            (self.position[0] - 3, self.position[1] + 4),
-            (self.position[0] - 10, self.position[1] + 4),
-        ]
-        pygame.draw.polygon(surface, (45, 28, 5), arrow)
 
 
 class SplashTower(Tower):
@@ -424,16 +325,6 @@ class SplashTower(Tower):
                     damage_type="splash",
                 )
             )
-
-    def draw_body(self, surface):
-        pygame.draw.circle(surface, self.color, self.position, 24)
-        for index in range(8):
-            angle = math.tau * index / 8
-            end = (
-                self.position[0] + math.cos(angle) * 18,
-                self.position[1] + math.sin(angle) * 18,
-            )
-            pygame.draw.line(surface, WHITE, self.position, end, 2)
 
 
 TOWER_CLASSES = {

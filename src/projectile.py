@@ -1,23 +1,10 @@
-import pygame
-
 from src.constants import DIRECTIONAL_LIFETIME, HOMING_LIFETIME, HIT_DISTANCE, EXP_DAMAGE_RATIO, EXP_KILL_BONUS
 from src.utils import distance
 
 
 class Projectile:
-    def __init__(
-        self,
-        position,
-        target,
-        speed,
-        damage,
-        color,
-        owner=None,
-        radius=0,
-        is_splash=False,
-        direction=None,
-        damage_type="normal",
-    ):
+    def __init__(self, position, target, speed, damage, color, owner=None, radius=0, is_splash=False,
+                 direction=None, damage_type="normal"):
         self.position = [float(position[0]), float(position[1])]
         self.target = target
         self.speed = speed
@@ -79,19 +66,3 @@ class Projectile:
                 self.owner.gain_exp(dealt * EXP_DAMAGE_RATIO)
                 if not enemy.alive:
                     self.owner.gain_exp(EXP_KILL_BONUS)
-
-    def draw(self, surface):
-        pygame.draw.circle(
-            surface,
-            self.color,
-            (int(self.position[0]), int(self.position[1])),
-            5,
-        )
-        if self.is_splash:
-            pygame.draw.circle(
-                surface,
-                (*self.color[:3],),
-                (int(self.position[0]), int(self.position[1])),
-                9,
-                1,
-            )

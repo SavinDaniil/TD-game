@@ -1,12 +1,12 @@
 {
-  "meta_coins": 216,
+  "meta_coins": 2227,
   "music_volume": 0.5,
   "game_speed": 3.0,
   "upgrades": {
     "max_hp": 10,
     "damage_bonus": 10,
     "attack_speed_bonus": 10,
-    "start_coins": 8,
+    "start_coins": 10,
     "kill_reward_bonus": 10
   }
 }
